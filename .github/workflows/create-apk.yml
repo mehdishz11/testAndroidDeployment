@@ -26,6 +26,6 @@ jobs:
 
       - name: Verify Keystore
         run: |
-          keytool -list -v -keystore app/Test.jks \
+          keytool -list -v -keystore '${{ github.workspace }}/app/Test.jks' \
           -storepass '${{ secrets.SIGNING_STORE_PASSWORD }}' \
           -alias '${{ secrets.SIGNING_KEY_ALIAS }}'
