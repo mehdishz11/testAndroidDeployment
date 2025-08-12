@@ -35,8 +35,20 @@ android {
         jvmTarget = "11"
     }
     buildFeatures {
-        compose = true    }
+        compose = true
+    }
 
+    applicationVariants.all {
+        val variant = this
+        variant.outputs.all {
+            val outputImpl = this as com.android.build.gradle.internal.api.ApkVariantOutputImpl
+            val flavor = variant.flavorName
+            val version = variant.versionName
+            val appName = "TestDeployment"
+
+            outputImpl.outputFileName = "${appName}-${flavor}(v${version}).apk"
+        }
+    }
 
 }
 
