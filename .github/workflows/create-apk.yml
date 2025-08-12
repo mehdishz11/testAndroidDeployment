@@ -56,28 +56,8 @@ jobs:
       # For APK Release
       - name: Build signed APK release
         run: |
-          # Clean previous builds
-          ./gradlew clean
-          
-          # Build with debug output
           ./gradlew ${{ env.main_project_module }}:assembleRelease \
-            --stacktrace --info \
             -Pandroid.injected.signing.store.file=${{ github.workspace }}/app/Test.jks \
-            -Pandroid.injected.signing.store.password='${{ secrets.SIGNING_STORE_PASSWORD }}' \
-            -Pandroid.injected.signing.key.alias='${{ secrets.SIGNING_KEY_ALIAS }}' \
-            -Pandroid.injected.signing.key.password='${{ secrets.SIGNING_KEY_PASSWORD }}'
-          
-          # Verify APK exists
-          echo "Generated APKs:"
-          find ${{ github.workspace }} -name "*.apk" -exec ls -lh {} \;
-          
-          # Copy to predictable location
-          mkdir -p apk_artifacts
-          cp ${{ github.workspace }}/app/build/outputs/apk/**/release/*.apk apk_artifacts/
-
-      - name: Upload APK artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: release-apk
-          path: apk_artifacts/*.apk
-          retention-days: 7
+            -Pandroid.injected.signing.store.password=${{ secrets.SIGNING_STORE_PASSWORD }} \
+            -Pandroid.injected.signing.key.alias=${{ secrets.SIGNING_KEY_ALIAS }} \
+            -Pandroid.injected.signing.key.password=${{ secrets.SIGNING_KEY_PASSWORD }}
