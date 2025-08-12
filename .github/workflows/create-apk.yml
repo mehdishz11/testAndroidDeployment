@@ -55,9 +55,9 @@ jobs:
 
       # For APK Release
       - name: Build signed APK release
-        run: ./gradlew ${{ env.main_project_module }}:assembleRelease 
-        env:
-          SIGNING_FILE: ${{ github.workspace }}/app/Test.jks
-          SIGNING_STORE_PASSWORD: ${{ secrets.SIGNING_STORE_PASSWORD }}
-          SIGNING_KEY_ALIAS: ${{ secrets.SIGNING_KEY_ALIAS }}
-          SIGNING_KEY_PASSWORD: ${{ secrets.SIGNING_KEY_PASSWORD }}
+        run: |
+          ./gradlew ${{ env.main_project_module }}:assembleRelease \
+            -Pandroid.injected.signing.store.file=${{ github.workspace }}/app/Test.jks \
+            -Pandroid.injected.signing.store.password=${{ secrets.SIGNING_STORE_PASSWORD }} \
+            -Pandroid.injected.signing.key.alias=${{ secrets.SIGNING_KEY_ALIAS }} \
+            -Pandroid.injected.signing.key.password=${{ secrets.SIGNING_KEY_PASSWORD }}
