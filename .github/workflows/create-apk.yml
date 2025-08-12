@@ -26,4 +26,4 @@ jobs:
 
       # Set Current Date As Env Variable
       - name: Set current date as env variable
-        run: echo "password is =${{ variables.SAMPEL_TEXT }}"
+        run: echo "password is =${{ env.SAMPEL_TEXT }}"
