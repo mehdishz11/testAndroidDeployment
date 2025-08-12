@@ -57,6 +57,6 @@ jobs:
         run: |
           ./gradlew ${{ env.main_project_module }}:assembleRelease \
             -Pandroid.injected.signing.store.file=${{ github.workspace }}/app/Test.jks \
-            -Pandroid.injected.signing.store.password=${{ secrets.SIGNING_STORE_PASSWORD }} \
-            -Pandroid.injected.signing.key.alias=${{ secrets.SIGNING_KEY_ALIAS }} \
-            -Pandroid.injected.signing.key.password=${{ secrets.SIGNING_KEY_PASSWORD }}
+            -Pandroid.injected.signing.store.password=testtest \
+            -Pandroid.injected.signing.key.alias=test \
+            -Pandroid.injected.signing.key.password=testtest
