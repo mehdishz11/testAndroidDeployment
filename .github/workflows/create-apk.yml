@@ -46,7 +46,7 @@ jobs:
       - name: Decode Signing Keystored
         run: |
           echo "${{ secrets.SIGNING_KEY_BASE64 }}" > keystore_base64.txt
-          base64 -d keystore_base64.txt > Test.jks
+          base64 -d keystore_base64.txt > app/Test.jks
           rm keystore_base64.txt
 
       # Run Build Project
@@ -57,8 +57,7 @@ jobs:
       - name: Build signed APK release
         run: |
           ./gradlew ${{ env.main_project_module }}:assembleRelease \
-            -Pandroid.injected.signing.store.file=${{ github.workspace }}/Test.jks \
+            -Pandroid.injected.signing.store.file=${{ github.workspace }}/app/Test.jks \
             -Pandroid.injected.signing.store.password=${{ secrets.SIGNING_STORE_PASSWORD }} \
             -Pandroid.injected.signing.key.alias=${{ secrets.SIGNING_KEY_ALIAS }} \
             -Pandroid.injected.signing.key.password=${{ secrets.SIGNING_KEY_PASSWORD }}
-            
