@@ -1,4 +1,3 @@
-my yml to generate the apk for githubaction is:
 name: Generated APK AAB (Upload - Create Artifact To Github Action)
 
 env:
