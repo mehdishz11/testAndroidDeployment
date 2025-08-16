@@ -8,9 +8,6 @@ on:
   push:
     branches:
       - main
-
-permissions:
-  contents: write
   
 jobs:
   build:
@@ -62,18 +59,3 @@ jobs:
         with:
           name: release-apk
           path: ${{ env.main_project_module }}/release/*.apk
-
-      - name: Create Git tag
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git tag v1.0.${{ github.run_number }}
-          git push origin v1.0.${{ github.run_number }}
-
-      - name: Upload release asset
-        uses: softprops/action-gh-release@v1
-        with:
-          tag_name: v1.0.${{ github.run_number }}
-          files: app/build/outputs/apk/release/app-release.apk
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
