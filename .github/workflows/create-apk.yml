@@ -6,15 +6,14 @@ env:
 
   # The name of the Play Store
   playstore_name: testing_store
-
+  
+permissions:
+      contents: write
 on:
   workflow_dispatch:
   push:
     branches:
       - main
-
-  permissions:
-    contents: write
   
 jobs:
   build:
@@ -93,5 +92,5 @@ jobs:
         run: |
           gh release delete-asset v${{ env.VERSION_NAME }} "Source code (zip)" --yes || true
           gh release delete-asset v${{ env.VERSION_NAME }} "Source code (tar.gz)" --yes || true
-        env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          env:
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
