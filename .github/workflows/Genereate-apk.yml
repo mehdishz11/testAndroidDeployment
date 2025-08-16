@@ -1,0 +1,98 @@
+name: Generate and release APK
+
+env:
+  # The name of the main module repository
+  main_project_module: app
+
+  # The name of the Play Store
+  playstore_name: testing_store
+  
+permissions:
+      contents: write
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+  
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+
+      - name: Set current date as env variable
+        run: echo "date_today=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
+
+      # Set Repository Name As Env Variable
+      - name: Set repository name as env variable
+        run: echo "repository_name=$(echo '${{ github.repository }}' | awk -F '/' '{print $2}')" >> $GITHUB_ENV
+
+      - name: Set Up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu' # See 'Supported distributions' for available options
+          java-version: '17'
+          cache: 'gradle'
+
+      - name: Change wrapper permissions
+        run: chmod +x ./gradlew
+
+        # sing the application
+      - name: Decode Signing Keystored
+        run: |
+          echo "${{ secrets.SIGNING_KEY_BASE64 }}" > keystore_base64.txt
+          base64 -d keystore_base64.txt > app/Test.jks
+          rm keystore_base64.txt
+
+      # Run Build Project
+      - name: Build gradle project
+        run: ./gradlew build
+
+      # For APK Release
+      - name: Build signed APK release
+        run: |
+          ./gradlew ${{ env.main_project_module }}:assembleRelease \
+            -Pandroid.injected.signing.store.file=${{ github.workspace }}/app/Test.jks \
+            -Pandroid.injected.signing.store.password=${{ secrets.SIGNING_STORE_PASSWORD }} \
+            -Pandroid.injected.signing.key.alias=${{ secrets.SIGNING_KEY_ALIAS }} \
+            -Pandroid.injected.signing.key.password=${{ secrets.SIGNING_KEY_PASSWORD }}
+
+
+      - name: Extract versionName (Gradle Kotlin DSL)
+        id: version
+        run: |
+          VERSION_NAME=$(grep "versionName" app/build.gradle.kts | sed -E 's/.*versionName\s*=\s*"([^"]+)".*/\1/')
+          echo "VERSION_NAME=$VERSION_NAME" >> $GITHUB_ENV
+
+      - name: Create Git tag (with existence check)
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+          if git ls-remote --tags origin | grep -q "refs/tags/v$VERSION_NAME"; then
+            echo "Tag v$VERSION_NAME already exists. Skipping tag creation."
+          else
+            git tag v$VERSION_NAME
+            git push origin v$VERSION_NAME
+          fi
+        env:
+          VERSION_NAME: ${{ env.VERSION_NAME }}
+
+      # ... build steps ...
+
+      - name: Rename APK file
+        run: |
+          mv app/release/app-release.apk "app/release/Patoghi-customer-${{ env.VERSION_NAME }}.apk"
+
+      - name: Upload release asset
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v${{ env.VERSION_NAME }}
+          name: Release v${{ env.VERSION_NAME }}
+          files: |
+            app/release/Patoghi-customer-${{ env.VERSION_NAME }}.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
