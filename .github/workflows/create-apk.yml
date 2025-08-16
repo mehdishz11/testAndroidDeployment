@@ -60,6 +60,7 @@ jobs:
             -Pandroid.injected.signing.key.alias=${{ secrets.SIGNING_KEY_ALIAS }} \
             -Pandroid.injected.signing.key.password=${{ secrets.SIGNING_KEY_PASSWORD }}
 
+
       - name: Extract versionName (Gradle Kotlin DSL)
         id: version
         run: |
@@ -84,43 +85,15 @@ jobs:
 
       - name: Rename APK file
         run: |
-          mv app/release/app-release.apk "app/release/patoghi-customer-${{ env.VERSION_NAME }}.apk"
+          mv app/release/app-release.apk "app/release/Patoghi-customer-${{ env.VERSION_NAME }}.apk"
 
-      - name: Create release without source assets
-        uses: ncipollo/release-action@v1
+      - name: Upload release asset
+        uses: softprops/action-gh-release@v1
         with:
-          tag: v${{ env.VERSION_NAME }}
+          tag_name: v${{ env.VERSION_NAME }}
           name: Release v${{ env.VERSION_NAME }}
-          artifacts: |
-            app/release/patoghi-customer-${{ env.VERSION_NAME }}.apk
-          allowUpdates: true
-          autoGenerateSourceZip: false  # CRITICAL - prevents source assets
+          files: |
+            app/release/Patoghi-customer-${{ env.VERSION_NAME }}.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Delete source assets (with retries)
-        run: |
-          # Wait for release to be available
-          for i in {1..10}; do
-            if gh api repos/${{ github.repository }}/releases/tags/v${{ env.VERSION_NAME }} >/dev/null 2>&1; then
-              echo "Release found on attempt $i"
-              break
-            fi
-            echo "Release not found, retrying in 3s (attempt $i/10)..."
-            sleep 3
-          done
-
-          # Get release ID
-          release_id=$(gh api repos/${{ github.repository }}/releases/tags/v${{ env.VERSION_NAME }} --jq '.id')
-          echo "Release ID: $release_id"
-
-          # Get assets
-          assets=$(gh api repos/${{ github.repository }}/releases/$release_id/assets --paginate)
-
-          # Delete source assets
-          echo "$assets" | jq -r '.[] | select(.name | test("Source code|source code|Source Code"; "i")) | .id' | while read asset_id; do
-            echo "Deleting asset ID: $asset_id"
-            gh api -X DELETE /repos/${{ github.repository }}/releases/assets/$asset_id
-          done
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
