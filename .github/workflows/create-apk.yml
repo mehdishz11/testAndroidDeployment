@@ -1,5 +1,8 @@
 name: Generated APK AAB (Upload - Create Artifact To Github Action)
 
+env:
+  main_project_module: app
+  
 on:
   workflow_dispatch:
   push:
