@@ -98,8 +98,7 @@ jobs:
           tag_name: v${{ env.VERSION_NAME }}
           name: Release v${{ env.VERSION_NAME }}
           files: |
-            app/release/app-release.apk
-            app/release/app-release.aab
+            app/release/patoghi-customer-${{ env.VERSION_NAME }}.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -108,7 +107,7 @@ jobs:
 
       - name: Delete default source code assets
         run: |
-          gh release delete-asset "v${{ env.VERSION_NAME }}" "Source code (zip)" --yes || true
-          gh release delete-asset "v${{ env.VERSION_NAME }}" "Source code (tar.gz)" --yes || true
+          gh release delete-asset "v${{ env.VERSION_NAME }}" "Source code (zip)" -R ${{ github.repository }} --yes || true
+          gh release delete-asset "v${{ env.VERSION_NAME }}" "Source code (tar.gz)" -R ${{ github.repository }} --yes || true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
