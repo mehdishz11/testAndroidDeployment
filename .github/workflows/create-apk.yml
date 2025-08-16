@@ -92,36 +92,23 @@ jobs:
         run: |
           mv app/release/app-release.apk "app/release/patoghi-customer-${{ env.VERSION_NAME }}.apk"
 
-      - name: Upload release asset
+      - name: Create draft release
         uses: softprops/action-gh-release@v1
         with:
           tag_name: v${{ env.VERSION_NAME }}
           name: Release v${{ env.VERSION_NAME }}
+          draft: true
           files: |
             app/release/patoghi-customer-${{ env.VERSION_NAME }}.apk
+
+      - name: Delete source assets
+        run: |
+          assets=$(gh api repos/${{ github.repository }}/releases/tags/v${{ env.VERSION_NAME }} --jq '.assets')
+          echo "$assets" | jq -r '.[] | select(.name | test("Source code|source code|Source Code"; "i")) | .id' | xargs -I{} gh api -X DELETE /repos/${{ github.repository }}/releases/assets/{}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Install GitHub CLI
-        run: sudo apt-get install -y gh
-
-      - name: Delete default source code assets
-        run: |
-          # Get asset IDs dynamically
-          assets=$(gh api repos/${{ github.repository }}/releases/tags/v${{ env.VERSION_NAME }} --jq '.assets')
-          
-          # Find and delete zip asset
-          zip_id=$(echo "$assets" | jq -r '.[] | select(.name | contains("source code") and contains("zip")) | .id')
-          if [ -n "$zip_id" ]; then
-            echo "Deleting zip asset ID: $zip_id"
-            gh api -X DELETE /repos/${{ github.repository }}/releases/assets/$zip_id
-          fi
-
-          # Find and delete tar.gz asset
-          tar_id=$(echo "$assets" | jq -r '.[] | select(.name | contains("source code") and contains("tar.gz")) | .id')
-          if [ -n "$tar_id" ]; then
-            echo "Deleting tar.gz asset ID: $tar_id"
-            gh api -X DELETE /repos/${{ github.repository }}/releases/assets/$tar_id
-          fi
+      - name: Publish release
+        run: gh release edit v${{ env.VERSION_NAME }} --draft=false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
