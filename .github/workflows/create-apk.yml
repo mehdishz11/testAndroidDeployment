@@ -107,7 +107,21 @@ jobs:
 
       - name: Delete default source code assets
         run: |
-          gh release delete-asset "v${{ env.VERSION_NAME }}" "Source code (zip)" -R ${{ github.repository }} --yes || true
-          gh release delete-asset "v${{ env.VERSION_NAME }}" "Source code (tar.gz)" -R ${{ github.repository }} --yes || true
+          # Get asset IDs dynamically
+          assets=$(gh api repos/${{ github.repository }}/releases/tags/v${{ env.VERSION_NAME }} --jq '.assets')
+          
+          # Find and delete zip asset
+          zip_id=$(echo "$assets" | jq -r '.[] | select(.name | contains("source code") and contains("zip")) | .id')
+          if [ -n "$zip_id" ]; then
+            echo "Deleting zip asset ID: $zip_id"
+            gh api -X DELETE /repos/${{ github.repository }}/releases/assets/$zip_id
+          fi
+
+          # Find and delete tar.gz asset
+          tar_id=$(echo "$assets" | jq -r '.[] | select(.name | contains("source code") and contains("tar.gz")) | .id')
+          if [ -n "$tar_id" ]; then
+            echo "Deleting tar.gz asset ID: $tar_id"
+            gh api -X DELETE /repos/${{ github.repository }}/releases/assets/$tar_id
+          fi
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
