@@ -88,11 +88,6 @@ jobs:
 
       # ... build steps ...
 
-      - name: Verify APK exists
-        run: |
-          ls -la app/build/outputs/apk/release/
-          test -f app/build/outputs/apk/release/app-release.apk
-
       - name: Upload release asset
         uses: softprops/action-gh-release@v1
         with:
