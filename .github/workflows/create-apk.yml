@@ -1,3 +1,4 @@
+my yml to generate the apk for githubaction is:
 name: Generated APK AAB (Upload - Create Artifact To Github Action)
 
 env:
@@ -66,4 +67,11 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: release-apk
-          path: ${{ env.main_project_module }}/release/*.apk      
+          path: ${{ env.main_project_module }}/release/*.apk
+
+      - name: Upload to GitHub Releases
+        uses: softprops/action-gh-release@v1
+        with:
+          files: ${{ env.main_project_module }}/release/*.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
