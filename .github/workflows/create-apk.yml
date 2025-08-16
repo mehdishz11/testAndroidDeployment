@@ -72,21 +72,19 @@ jobs:
           VERSION_NAME=$(grep "versionName" app/build.gradle.kts | sed -E 's/.*versionName\s*=\s*"([^"]+)".*/\1/')
           echo "VERSION_NAME=$VERSION_NAME" >> $GITHUB_ENV
 
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v1
-        with:
-          name: Release v${{ env.VERSION_NAME }}
-          body: |-
-            Automated build for version ${{ env.VERSION_NAME }}
-            Build Number: ${{ github.run_number }}
-          files: |
-            app/build/outputs/apk/release/app-release.apk
-            app/build/outputs/bundle/release/app-release.aab
-          draft: false
-          prerelease: false
-          generate_release_notes: true
+      - name: Create Git tag (with existence check)
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+          if git ls-remote --tags origin | grep -q "refs/tags/v$VERSION_NAME"; then
+            echo "Tag v$VERSION_NAME already exists. Skipping tag creation."
+          else
+            git tag v$VERSION_NAME
+            git push origin v$VERSION_NAME
+          fi
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION_NAME: ${{ env.VERSION_NAME }}
 
       # ... build steps ...
 
