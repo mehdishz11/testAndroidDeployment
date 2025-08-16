@@ -1,13 +1,20 @@
 name: Generated APK AAB (Upload - Create Artifact To Github Action)
 
 env:
+  # The name of the main module repository
   main_project_module: app
-  
+
+  # The name of the Play Store
+  playstore_name: testing_store
+
 on:
   workflow_dispatch:
   push:
     branches:
       - main
+
+  permissions:
+    contents: write
   
 jobs:
   build:
@@ -59,3 +66,32 @@ jobs:
         with:
           name: release-apk
           path: ${{ env.main_project_module }}/release/*.apk
+
+      - name: Create Git tag
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag v1.0.${{ github.run_number }}
+          git push origin v1.0.${{ github.run_number }}
+
+      - name: Get versionName from Gradle
+        id: get_version
+        run: |
+          VERSION_NAME=$(grep "versionName" app/build.gradle | awk '{print $2}' | tr -d '\"')
+          echo "VERSION_NAME=$VERSION_NAME" >> $GITHUB_ENV
+
+      - name: Upload release asset
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v${{ env.VERSION_NAME }}
+          name: Release v${{ env.VERSION_NAME }}
+          files: app/build/outputs/apk/release/app-release.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Delete default source code assets
+        run: |
+          gh release delete-asset v${{ env.VERSION_NAME }} "Source code (zip)" --yes || true
+          gh release delete-asset v${{ env.VERSION_NAME }} "Source code (tar.gz)" --yes || true
+        env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
